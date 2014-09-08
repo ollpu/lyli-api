@@ -13,13 +13,11 @@ def getDefaultName():
     name = request.form.get('default_name', '')
     return backend.getNextName(name)
 
-def bad_request(reason):
-    return make_response(jsonify( { 'error': reason } ), 400)
+def bad_request(reason, code=400):
+    return make_response(jsonify( { 'error': reason } ), code)
 
 @app.route('/<name>', methods = ['GET'])
 def visit(name):
-    if name == '':
-        abort(404)
     url = backend.visit(name)
     if url is None:
         abort(404)
@@ -47,22 +45,18 @@ def new():
         return bad_request('No URL')
     
     elif not isValidScheme(url):
-        return bad_request('Illegal scheme')
+        return bad_request('Illegal scheme', 403)
     
     elif not isValidName(name):
-        return bad_request('Illegal name')
+        return bad_request('Illegal name', 403)
     
     elif not backend.shorten(url, name):
-        return bad_request('Name is already in use')
+        return bad_request('Name is already in use', 403)
     
-    return jsonify({
-            'short-url': 'http://lyli.fi/%s' % quote_plus(name.encode('utf-8')),
+    return make_response(jsonify({
+            'short-url': 'http://lyli.fi/%s' % name,
             'url': url
-        })
-
-@app.errorhandler(400)
-def notfound(error):
-    return make_response(jsonify( { 'error': 'Bad Request' } ), 400)
+        }), 201)
 
 @app.errorhandler(404)
 def notfound(error):
