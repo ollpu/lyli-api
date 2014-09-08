@@ -1,6 +1,6 @@
 from urllib import quote_plus
 
-from flask import jsonify, make_response, request, abort
+from flask import jsonify, make_response, request, abort, render_template
 
 from app import app
 from app.urlshortener import URLShortener
@@ -57,6 +57,10 @@ def new():
             'short-url': 'http://lyli.fi/%s' % quote_plus(name.encode('utf-8')),
             'url': url
         }), 201)
+
+@app.route('/', methods = ['GET'])
+def index():
+    return render_template('index.html')
 
 @app.errorhandler(404)
 def notfound(error):

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div>
+    <img class="center" src="http://lyli.fi/lyli.png" alt="Käsin piirretty LyLi"/>
+</div>
+
+<div>
+    <p><a href="http://lyli.fi/">Ihmisille tarkoitettu versio</a></p>
+</div>
+
+<div>
+    <h2>Luo uusi lyhennys</h2>
+    <pre>curl -H 'Content-Type: application/json' -X POST -d '{"url": "http://example.com/ä"}' api.lyli.fi</pre>
+</div>
+<div>
+    <h2>Luo uusi lyhennys, valitse itse pääte</h2>
+    <pre>curl -H 'Content-Type: application/json' -X POST -d '{"url": "http://example.com/ä", "name": "esimerkki"}' api.lyli.fi</pre>
+</div>
+<div>
+    <h2>Avaa lyhyt linkki</h2>
+    <pre>curl api.lyli.fi/esimerkki</pre>
+</div>
+{% endblock %}
