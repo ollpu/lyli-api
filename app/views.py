@@ -1,3 +1,5 @@
+from urllib import quote_plus
+
 from flask import jsonify, make_response, request, abort
 
 from app import app
@@ -54,7 +56,7 @@ def new():
         return bad_request('Name is already in use')
     
     return jsonify({
-            'short-url': 'http://lyli.fi/%s' % name,
+            'short-url': 'http://lyli.fi/%s' % quote_plus(name.encode('utf-8')),
             'url': url
         })
 
