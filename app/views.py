@@ -54,7 +54,7 @@ def new():
         return bad_request('Name is already in use', 403)
     
     return make_response(jsonify({
-            'short-url': 'http://lyli.fi/%s' % name,
+            'short-url': 'http://lyli.fi/%s' % quote_plus(name.encode('utf-8')),
             'url': url
         }), 201)
 
