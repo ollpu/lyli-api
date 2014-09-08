@@ -1,4 +1,4 @@
-from flask import jsonify, make_response,  request
+from flask import jsonify, make_response, request, abort
 
 from app import app
 from app.urlshortener import URLShortener
@@ -11,55 +11,56 @@ def getDefaultName():
     name = request.form.get('default_name', '')
     return backend.getNextName(name)
 
+def bad_request(reason):
+    return make_response(jsonify( { 'error': reason } ), 400)
+
+@app.route('/<name>', methods = ['GET'])
+def visit(name):
+    if name == '':
+        abort(404)
+    url = backend.visit(name)
+    if url is None:
+        abort(404)
+
+    return jsonify({
+            'short-url': 'http://lyli.fi/%s' % name,
+            'url': url
+        })
+
 @app.route('/', methods = ['POST'])
 def new():
+    if not request.json:
+        return bad_request('Data must be sent in json format')
+    url = request.json.get('url', '')
+    try:
+        url = encodeURL(url)
+    except:
+        return bad_request('Could not encode URL')
 
-
-#@app.route('/', methods = ['GET', 'POST'])
-#@app.route('/<name>', methods = ['GET', 'POST'])
-def index(name=''):
+    name = request.json.get('name', getDefaultName())
+    name = decodeURLPath(name)
+    name = removeControlCharacters(name)
     
-
-    args = {}
-    for key in ['default_name', 'name', 'url']:
-        args[key] = request.form.get(key, '')
-
-    if name != '':
-        url = backend.visit(name)
-        if url is None:
-            args['nosuchname'] = name
-        else:
-            return redirect(url, code=307)
+    if url == '':
+        return bad_request('No URL')
     
-    elif request.method == 'POST':
-        url = args['url']
-        try:
-            url = encodeURL(url)
-        except:
-            args['illegalurl'] = True
-        else:
-            name = args['name'] or args['default_name']
-            name = decodeURLPath(name)
-            name = removeControlCharacters(name)
-            
-            if url == '':
-                args['emptyurl'] = True
-            
-            elif not isValidScheme(url):
-                args['illegalscheme'] = True
-            
-            elif not isValidName(name):
-                args['illegalname'] = True
-            
-            elif backend.shorten(url, name):
-                args['newurl'] = name
-                args['url'] = ''
-                args['name'] = ''
-            else:
-                args['nameinuse'] = name
+    elif not isValidScheme(url):
+        return bad_request('Illegal scheme')
+    
+    elif not isValidName(name):
+        return bad_request('Illegal name')
+    
+    elif not backend.shorten(url, name):
+        return bad_request('Name is already in use')
+    
+    return jsonify({
+            'short-url': 'http://lyli.fi/%s' % name,
+            'url': url
+        })
 
-    args['default_name'] = getDefaultName()
-    return render_template('index.html', **args)
+@app.errorhandler(400)
+def notfound(error):
+    return make_response(jsonify( { 'error': 'Bad Request' } ), 400)
 
 @app.errorhandler(404)
 def notfound(error):
