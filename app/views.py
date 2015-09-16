@@ -13,8 +13,10 @@ def getDefaultName():
     name = request.form.get('default_name', '')
     return backend.getNextName(name)
 
-def bad_request(reason, code=400):
-    return make_response(jsonify( { 'error': reason } ), code)
+def bad_request(reason, error_code=0, code=400):
+    return make_response(jsonify( { 
+        'error': reason, 'error_code': error_code
+    } ), code)
 
 @app.route('/<name>', methods = ['GET'])
 def visit(name):
@@ -35,23 +37,23 @@ def new():
     try:
         url = encodeURL(url)
     except:
-        return bad_request('Could not encode URL')
+        return bad_request('Could not encode URL', 1)
 
     name = request.json.get('name', getDefaultName())
     name = decodeURLPath(name)
     name = removeControlCharacters(name)
     
     if url == '':
-        return bad_request('No URL')
+        return bad_request('No URL', 2)
     
     elif not isValidScheme(url):
-        return bad_request('Illegal scheme', 403)
+        return bad_request('Illegal scheme', 3, 403)
     
     elif not isValidName(name):
-        return bad_request('Illegal name', 403)
+        return bad_request('Illegal name', 4, 403)
     
     elif not backend.shorten(url, name):
-        return bad_request('Name is already in use', 403)
+        return bad_request('Name is already in use', 5, 403)
     
     return make_response(jsonify({
             'short-url': 'http://lyli.fi/%s' % quote_plus(name.encode('utf-8')),
